@@ -1,7 +1,7 @@
 'use strict';
 
 const dayjs = require("dayjs");
-const sqlite3 = require('sqlite3');
+const sqlite = require('sqlite3');
 
 function Film(id, title, isFavorite = false, watchDate, rating) {
     this.id = id;
@@ -26,130 +26,59 @@ function Film(id, title, isFavorite = false, watchDate, rating) {
 
 
 function FilmLibrary() {
-    this.list = [];
 
-    this.print = () => {
-        console.log("***** List of films *****");
-        this.list.forEach((item) => console.log(item.toString()));
+    const db = new sqlite.Database('films.db', (err) => { if (err) throw err; });
+
+    this.closeDB = () => {
+        try {
+            db.close();
+        }
+        catch (error) {
+            console.log('Impossible to close the database. Error:');
+            console.error(error);
+        }
     }
 
-    this.addNewFilm = (film) => {
-        if (!this.list.some(f => f.id == film.id))
-            this.list.push(film);
-        else
-            throw new Error('Duplicate id');
-    };
-
-    this.deleteFilm = (id) => {
-        const newList = this.list.filter(function (film, index, arr) {
-            return film.id !== id;
-        })
-        this.list = newList;
-    }
-
-    this.resetWatchedFilms = () => {
-        this.list.forEach((film) => delete film.watchDate);
-    }
-
-    this.getRated = () => {
-        const newList = this.list.filter(function (film, index, arr) {
-            return film.rating > 0;
-        })
-        return newList;
-    }
-
-    this.sortByDate = () => {
-        const newArray = [...this.list];
-        newArray.sort((d1, d2) => {
-            if (!(d1.watchDate)) return 1;   // null/empty watchDate is the lower value
-            if (!(d2.watchDate)) return -1;
-            return d1.watchDate.diff(d2.watchDate, 'day')
-        });
-        return newArray;
-    }
-
-    this.getAllFilmFromDB = async () => {
+    this.getAll = () => {
         return new Promise((resolve, reject) => {
-            const db = new sqlite3.Database('films.db', (err) => {
-                if (err) {
-                    console.error(err.message);
-                    reject(err);
-                }
-            });
-
             const query = 'SELECT * FROM films';
-
             db.all(query, [], (err, rows) => {
                 if (err) {
-                    console.error(err.message);
                     reject(err);
                 }
-
-                db.close((err) => {
-                    if (err) {
-                        console.error(err.message);
-                        reject(err);
-                    }
-                });
-
-                const films = rows.map(row => {
-                    return new Film(row.id, row.title, row.favorite, row.watchDate, row.rating);
-                });
-
-                resolve(films);
+                else {
+                    const films = rows.map(record => new Film(record.id, record.title, record.favorite == 1, record.watchdate, record.rating));
+                    resolve(films);
+                }
             });
         });
-    }
+    };
 }
 
 
 async function main() {
-    // Creating some film entries
-    const f1 = new Film(1, "Pulp Fiction", true, "2023-03-10", 5);
-    const f2 = new Film(2, "21 Grams", true, "2023-03-17", 4);
-    const f3 = new Film(3, "Star Wars", false);
-    const f4 = new Film(4, "Matrix", false);
-    const f5 = new Film(5, "Shrek", false, "2023-03-21", 3);
 
-    // Adding the films to the FilmLibrary
-    const library = new FilmLibrary();
-    library.addNewFilm(f1);
-    library.addNewFilm(f2);
-    library.addNewFilm(f3);
-    library.addNewFilm(f4);
-    library.addNewFilm(f5);
-
-    // Print Sorted films
-    console.log("***** List of films (sorted) *****");
-    const sortedFilms = library.sortByDate();
-    sortedFilms.forEach((film) => console.log(film.toString()));
-
-    // Deleting film #3
-    library.deleteFilm(3);
-
-    // Reset dates
-    library.resetWatchedFilms();
-
-    // Printing modified Library
-    library.print();
-
-    // Retrieve and print films with an assigned rating
-    console.log("***** Films filtered, only the rated ones *****");
-    const ratedFilms = library.getRated();
-    ratedFilms.forEach((film) => console.log(film.toString()));
-
-    //console.log("Percorso del database:", 'films.db');
+    const filmLibrary = new FilmLibrary();
 
     try {
-        const filmsFromDB = await library.getAllFilmFromDB(); // Attendiamo la risoluzione della promessa
-        console.log("***** Films from database *****");
-        filmsFromDB.forEach((film) => console.log(film.toString()));
-    } catch (error) {
-        console.error("Errore durante il recupero dei film dal database:", error);
-    }
+        // get all the movies
+        console.log('\n****** All the movies in the database: ******');
+        const films = await filmLibrary.getAll();
+        if (films.length === 0) {
+            // If there are not movies in the database it is useless to execute other queries.
+            console.log('No movies yet, try later.');
+            filmLibrary.closeDB();
+            return;
+        }
+        else
+            films.forEach((film) => console.log(`${film}`));
 
+    } catch (error) {
+        console.error(`Impossible to retrieve movies! ${error}`);
+        return;
+    }
     // Additional instruction to enable debug 
     debugger;
-}
+};
 
 main();
