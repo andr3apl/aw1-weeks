@@ -128,6 +128,48 @@ function FilmLibrary() {
         });
     }
 
+
+    this.storeMovie = (film) => {
+        return new Promise((resolve, reject) => {
+            const query = 'INSERT INTO films (title, favorite, watchdate, rating) VALUES (?, ?, ?, ?)';
+            const params = [film.title, film.favorite ? 1 : 0, film.watchDate ? film.watchDate.format('YYYY-MM-DD') : null, film.rating];
+            db.run(query, params, function (err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: this.lastID });
+                }
+            });
+        });
+    };
+
+
+    this.deleteMovie = (id) => {
+        return new Promise((resolve, reject) => {
+            const query = 'DELETE FROM films WHERE id = ?';
+            db.run(query, id, function (err) {
+                if (err)
+                    reject(err);
+
+                else
+                    resolve({ change: this.changes });
+            });
+        });
+    };
+
+    this.deleteAllWatchDates = () => {
+        return new Promise((resolve, reject) => {
+            const query = 'UPDATE films SET watchdate = NULL';
+            db.run(query, function (err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ changes: this.changes });
+                }
+            });
+        });
+    };
+
 }
 
 
@@ -148,50 +190,50 @@ async function main() {
         else
             films.forEach((film) => console.log(`${film}`));
 
-
-        console.log('***List of favorites films:  ***');
-        const favoriteFilm = await filmLibrary.getFavourite();
-        if (favoriteFilm.length === 0) {
-            console.log('No favorites movies yet, try again later.');
-            filmLibrary.closeDB();
-            return;
-        }
-        else
-            favoriteFilm.forEach((film) => console.log(`${film}`));
         /*
-                console.log('***Movies watched today: ***');
-                const wathcedFilm = await filmLibrary.getWatchedToday();
-                if (wathcedFilm.length === 0) {
-                    console.log('No movies watched today, try again later.');
+                console.log('***List of favorites films:  ***');
+                const favoriteFilm = await filmLibrary.getFavourite();
+                if (favoriteFilm.length === 0) {
+                    console.log('No favorites movies yet, try again later.');
                     filmLibrary.closeDB();
                     return;
                 }
                 else
-                    wathcedFilm.forEach((film) => console.log(`${film}`));
+                    favoriteFilm.forEach((film) => console.log(`${film}`));
+                
+                        console.log('***Movies watched today: ***');
+                        const wathcedFilm = await filmLibrary.getWatchedToday();
+                        if (wathcedFilm.length === 0) {
+                            console.log('No movies watched today, try again later.');
+                            filmLibrary.closeDB();
+                            return;
+                        }
+                        else
+                            wathcedFilm.forEach((film) => console.log(`${film}`));
+               
+                const watchdate = dayjs('2023-03-19');
+                console.log('***Movies watched before ' + watchdate.format('YYYY-MM-DD') + ': ***');
+                const watchedBeforeDate = await filmLibrary.getWatchedBeforeDate(watchdate);
+                if (watchedBeforeDate.length === 0) {
+                    console.log('No movies watched before the date, try again later.');
+                    filmLibrary.closeDB();
+                    return;
+                }
+                else
+                    watchedBeforeDate.forEach((film) => console.log(`${film}`));
+        
+        
+                const score = 4;
+                console.log('*** Film with score greater or equal than ' + score + ': ***');
+                const ratedFilm = await filmLibrary.getRatingOf(score);
+                if (ratedFilm.length === 0) {
+                    console.log('No film with a rating greater or equal than ' + score + '. Try later!');
+                    filmLibrary.closeDB();
+                    return;
+                }
+                else
+                    ratedFilm.forEach((film) => console.log(`${film}`));
         */
-        const watchdate = dayjs('2023-03-19');
-        console.log('***Movies watched before ' + watchdate.format('YYYY-MM-DD') + ': ***');
-        const watchedBeforeDate = await filmLibrary.getWatchedBeforeDate(watchdate);
-        if (watchedBeforeDate.length === 0) {
-            console.log('No movies watched before the date, try again later.');
-            filmLibrary.closeDB();
-            return;
-        }
-        else
-            watchedBeforeDate.forEach((film) => console.log(`${film}`));
-
-
-        const score = 4;
-        console.log('*** Film with score greater or equal than ' + score + ': ***');
-        const ratedFilm = await filmLibrary.getRatingOf(score);
-        if (ratedFilm.length === 0) {
-            console.log('No film with a rating greater or equal than ' + score + '. Try later!');
-            filmLibrary.closeDB();
-            return;
-        }
-        else
-            ratedFilm.forEach((film) => console.log(`${film}`));
-
         const string = 'war';
         console.log('*** Film with title containing ' + string + ': ***');
         const stringFilm = await filmLibrary.getWord(string);
@@ -202,6 +244,40 @@ async function main() {
         }
         else
             stringFilm.forEach((film) => console.log(`${film}`));
+
+        /*
+                const nuovoFilm = new Film(10, 'Nuovo film', false, null, 4);
+                try {
+                    const result = await filmLibrary.storeMovie(nuovoFilm);
+                    console.log('Nuovo film inserito con ID:', result.id);
+                } catch (error) {
+                    console.error('Impossibile inserire il nuovo film:', error);
+                }
+        */
+
+        const filmIdToRemove = 8; // ID del film che si desidera rimuovere
+
+        try {
+            const result = await filmLibrary.deleteMovie(filmIdToRemove);
+            if (result.changes >= 0) {
+                console.log('Film rimosso con successo!');
+            } else {
+                console.log('Nessun film trovato con l\'ID specificato.');
+            }
+        } catch (error) {
+            console.error('Impossibile rimuovere il film:', error);
+        }
+
+        try {
+            const result = await filmLibrary.deleteAllWatchDates();
+            if (result.changes > 0) {
+                console.log('Date di visione di tutti i film eliminate con successo!');
+            } else {
+                console.log('Nessun film trovato con una data di visione da eliminare.');
+            }
+        } catch (error) {
+            console.error('Impossibile eliminare le date di visione dei film:', error);
+        }
 
 
 
