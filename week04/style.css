@@ -1,1 +1,8 @@
-h1 { background-color: darkgreen;}
+h1 {background-color: darkgreen;}
+
+header, footer {
+    background-color: lightskyblue;
+    color: navy;
+}
+
+main {background-color: hsl(203, 92%, 85%);}
