@@ -1,6 +1,6 @@
 "use strict";
 
-window.addEventListener('load', event => {
+//1 window.addEventListener('load', event => {
     let p = document.createElement('p');
     let d = dayjs().format("YYYY-MM-DD HH:mm:ss");
     p.innerText = d;
@@ -11,20 +11,16 @@ window.addEventListener('load', event => {
     let rows = document.querySelectorAll('table tr');
 
     for (let row of rows) {
-
-
         let b = row.querySelector('button');
         if (b)
             b.addEventListener('click', event => {
-                //console.log(event.target, "cliccato!");
+                //console.log(event.target,"cliccato!");
                 //console.log(row.children[3].innerText);
                 const score = row.children[3].innerText;
                 const newScore = parseInt(score) + 1;
                 row.children[3].innerText = newScore;
             })
-
     }
+//1 });
 
 //document.getElementsByTagName("table")[0].classList.remove("table");
-
-});
