@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Container, Row, Button, Form, Table } from 'react-bootstrap';
 import { useState } from 'react';
 import dayjs from 'dayjs';
+import AnswerForm from './AnswerForm';
 //import './App.css';
 
 
@@ -47,7 +48,7 @@ function MyRow(props) {
       <td>{e.respondent}</td>
       <td>{e.score}</td>
       <td><Button variant="primary" onClick={props.increaseScore}>Vote</Button>
-      <Button variant="danger" onClick={props.deleteRow}>Delete</Button></td>
+        <Button variant="danger" onClick={props.deleteRow}>Delete</Button></td>
     </tr>
   );
 }
@@ -56,11 +57,12 @@ function MyTable(props) {
   const [list, setList] = useState(props.listOfAnswers);
 
   function increaseScore(id) {
-    //console.log('increase score id: '+id);
+    //console.log('increase score id: ' + id);
     setList((oldList) => oldList.map((e) => {
       if (e.id === id) {
         return Object.assign({}, e, { score: e.score + 1 });
-      } else {
+      }
+      else {
         return e;
       }
     })
@@ -68,37 +70,34 @@ function MyTable(props) {
   }
 
   const deleteRow = (id) => {
-    setList( (oldList) => oldList.filter(
-      (e) => e.id!==id
+    setList((oldList) => oldList.filter(
+      (e) => e.id !== id
     ));
   }
 
   return (
-    <Table>
-      {/* <Table striped bordered hover> */}
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Text</th>
-          <th>Author</th>
-          <th>Score</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {list.map((e) =>
-          <MyRow e={e} key={e.id} increaseScore={()=>increaseScore(e.id)}
-            deleteRow={()=>deleteRow(e.id)} />)
-        }
-        <tr>
-          <td><Form.Control type="date" name="date" /></td>
-          <td><Form.Control type="text" name="text" /></td>
-          <td><Form.Control type="text" name="respondent" /></td>
-          <td><Form.Control className="w-25" type="text" name="score" /></td>
-          <td><Button variant="primary">+</Button> </td>
-        </tr>
-      </tbody>
-    </Table>
+    <div>
+      <Table>
+        {/* <Table striped bordered hover> */}
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Text</th>
+            <th>Author</th>
+            <th>Score</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((e) =>
+            <MyRow e={e} key={e.id} increaseScore={() => increaseScore(e.id)}
+              deleteRow={() => deleteRow(e.id)} />)
+          }
+
+        </tbody>
+      </Table>
+      <AnswerForm />
+    </div>
   )
 }
 
@@ -134,4 +133,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
